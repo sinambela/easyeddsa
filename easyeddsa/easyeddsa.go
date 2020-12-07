@@ -177,3 +177,32 @@ func StringToKeyObject(pubKStr, privKStr string, buffPool *bytesbuff.EasyBytes) 
 
 	return eddsax, nil
 }
+
+//PubKStringToObj for converting publickey string to object
+func PubKStringToObj(pubKStr string, buffPool *bytesbuff.EasyBytes) (ed25519.PublicKey, error) {
+	buff := (*buffPool).GetBytesBuffer()
+
+	if _, err := buff.WriteString(pubKStr); err != nil {
+		buffPool.PutBytesBuffer(buff)
+		return nil, err
+	}
+
+	pubKPEM, _ := pem.Decode(buff.Bytes())
+	if pubKPEM == nil {
+		buffPool.PutBytesBuffer(buff)
+		return nil, errPubKeyPEMNotValid
+	}
+
+	buffPool.PutBytesBuffer(buff)
+
+	pubK, err := x509.ParsePKIXPublicKey(pubKPEM.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pubK.(ed25519.PublicKey)) != ed25519.PublicKeySize {
+		return pubK.(ed25519.PublicKey), errPubKeyLengthNotValid
+	}
+
+	return pubK.(ed25519.PublicKey), nil
+}
