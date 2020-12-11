@@ -200,9 +200,16 @@ func PubKStringToObj(pubKStr string, buffPool *bytesbuff.EasyBytes) (ed25519.Pub
 		return nil, err
 	}
 
-	if len(pubK.(ed25519.PublicKey)) != ed25519.PublicKeySize {
-		return pubK.(ed25519.PublicKey), errPubKeyLengthNotValid
+	switch pubK := pubK.(type) {
+	case *ed25519.PublicKey:
+		if len(*pubK) != ed25519.PublicKeySize {
+			return *pubK, errPubKeyLengthNotValid
+		}
+
+		return *pubK, nil
+
+	default:
+		return ed25519.PublicKey{}, errPubKeyLengthNotValid
 	}
 
-	return pubK.(ed25519.PublicKey), nil
 }
