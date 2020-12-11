@@ -138,7 +138,12 @@ func StringToKeyObject(pubKStr, privKStr string, buffPool *bytesbuff.EasyBytes) 
 		return nil, err
 	}
 
-	eddsax.pubKey = pubKey.(ed25519.PublicKey)
+	switch pubKey := pubKey.(type) {
+	case *ed25519.PublicKey:
+		eddsax.pubKey = *pubKey
+	default:
+		return nil, errPubKeyPEMNotValid
+	}
 
 	//===============process private key=======================
 	buff.Reset()
@@ -160,7 +165,13 @@ func StringToKeyObject(pubKStr, privKStr string, buffPool *bytesbuff.EasyBytes) 
 		return nil, err
 	}
 
-	eddsax.privKey = privK.(ed25519.PrivateKey)
+	switch privK := privK.(type) {
+	case *ed25519.PrivateKey:
+		eddsax.privKey = *privK
+	default:
+		return nil, errPrivKeyPEMNotValid
+	}
+
 	//----------------------------------------------------------------
 
 	buffPool.PutBytesBuffer(buff)
