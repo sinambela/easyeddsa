@@ -129,7 +129,7 @@ func StringToKeyObject(pubKStr, privKStr string, buffPool *bytesbuff.EasyBytes) 
 	pubKPEM, _ := pem.Decode(buff.Bytes())
 	if pubKPEM == nil {
 		buffPool.PutBytesBuffer(buff)
-		return nil, errPrivKeyPEMNotValid
+		return nil, errPubKeyPEMNotValid
 	}
 
 	pubKey, err := x509.ParsePKIXPublicKey(pubKPEM.Bytes)
@@ -138,12 +138,12 @@ func StringToKeyObject(pubKStr, privKStr string, buffPool *bytesbuff.EasyBytes) 
 		return nil, err
 	}
 
-	switch pubKey := pubKey.(type) {
-	case *ed25519.PublicKey:
-		eddsax.pubKey = *pubKey
-	default:
+	actualPubKey, isOk := pubKey.(ed25519.PublicKey)
+	if !isOk {
 		return nil, errPubKeyPEMNotValid
 	}
+
+	eddsax.pubKey = actualPubKey
 
 	//===============process private key=======================
 	buff.Reset()
@@ -165,12 +165,12 @@ func StringToKeyObject(pubKStr, privKStr string, buffPool *bytesbuff.EasyBytes) 
 		return nil, err
 	}
 
-	switch privK := privK.(type) {
-	case *ed25519.PrivateKey:
-		eddsax.privKey = *privK
-	default:
-		return nil, errPrivKeyPEMNotValid
+	actualPrivKey, isOk := privK.(ed25519.PrivateKey)
+	if !isOk {
+		return nil, errPubKeyPEMNotValid
 	}
+
+	eddsax.privKey = actualPrivKey
 
 	//----------------------------------------------------------------
 
@@ -211,17 +211,15 @@ func PubKStringToObj(pubKStr string, buffPool *bytesbuff.EasyBytes) (ed25519.Pub
 		return nil, err
 	}
 
-	//change to switch=============
-	switch pubK := pubK.(type) {
-	case *ed25519.PublicKey:
-		if len(*pubK) != ed25519.PublicKeySize {
-			return *pubK, errPubKeyLengthNotValid
-		}
-
-		return *pubK, nil
-
-	default:
-		return ed25519.PublicKey{}, errPubKeyLengthNotValid
+	actualPubK, isOk := pubK.(ed25519.PublicKey)
+	if !isOk {
+		return nil, errPubKeyPEMNotValid
 	}
+
+	if len(actualPubK) != ed25519.PublicKeySize {
+		return actualPubK, errPubKeyLengthNotValid
+	}
+
+	return actualPubK, nil
 
 }
