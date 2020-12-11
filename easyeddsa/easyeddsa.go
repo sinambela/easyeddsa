@@ -200,6 +200,7 @@ func PubKStringToObj(pubKStr string, buffPool *bytesbuff.EasyBytes) (ed25519.Pub
 		return nil, err
 	}
 
+	//change to switch============
 	switch pubK := pubK.(type) {
 	case *ed25519.PublicKey:
 		if len(*pubK) != ed25519.PublicKeySize {
